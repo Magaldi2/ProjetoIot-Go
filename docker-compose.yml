@@ -1,0 +1,31 @@
+services:
+  go_app:
+    build:
+      context: .  # Diretório atual
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"  # Porta do serviço Go
+    volumes:
+      - .:/app  # Montar o diretório local no container
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=example
+      - MYSQL_DB=weather_data
+      - MQTT_BROKER=98.84.130.156 #colocar ip que se conecta com o broker
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-database
+    environment:
+      MYSQL_ROOT_PASSWORD: example  # Senha do root
+      MYSQL_DATABASE: weather_data  # Banco de dados inicial
+    ports:
+      - "3306:3306"  # Porta do MySQL para acesso externo
+    volumes:
+      - mysql_data:/var/lib/mysql  # Volume persistente para os dados
+      - ./tabela.sql:/docker-entrypoint-initdb.d/tabela.sql  # Script SQL de inicialização
+      
+volumes:
+  mysql_data:
+    driver: local

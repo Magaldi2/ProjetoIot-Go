@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Clima PUC</title>
+    <link rel="icon" href="{{ url_for('static', filename='clima.png') }}" type="image/png">
+
+    <style>
+        /* RESET DE ESTILOS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #1f2a44, #24304a);
+            color: #fff;
+            margin: 0;
+            height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* CABEÇALHO FIXO */
+        header {
+            background: rgba(20, 27, 43, 0.85);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 1000;
+            padding: 20px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+            display: flex;
+            align-items: center;
+        }
+
+        .header-content {
+            display: flex;
+            width: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        header h1 {
+            color: #02d7fd;
+            font-size: 3em;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            margin: 0;
+            text-align: center;
+        }
+
+        /* Botão de voltar */
+        .back-btn {
+            background-color: #02d7fd;
+            color: #fff;
+            font-size: 1.2em;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s ease;
+            left:5px;
+        }
+
+        .back-btn:hover {
+            background-color: #0199c1;
+        }
+
+        /* CONTEÚDO PRINCIPAL */
+        .container {
+            margin-top: 95px;
+            padding: 40px;
+            background: rgba(20, 27, 43, 0.85);
+            border-radius: 30px;
+            width: 90%;
+            max-width: 1300px;
+            box-shadow: 0 15px 45px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(20px);
+            animation: fadeIn 1s ease-out;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        
+        .graph-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin-top: 20px;
+        margin-bottom: 50px;
+      }
+
+      .graph-item {
+        background: rgba(170, 170, 170, 0);
+        border-radius: 5px;
+        padding: 25px;
+        position: relative;
+        width: 100%;
+        height: 70vh; /* Define a altura como 50% da tela */
+        max-height: 90vh; /* Garante um limite máximo */
+        }
+        
+      .graph-item canvas {
+        width: 100%;
+        height: 100%; /* Ocupa toda a altura do container */
+        border-radius: 15px;
+        transition: transform 0.3s ease-in-out;
+        }
+        .graph-item h3 {
+        color: #0199c1;
+        font-size: 1.6em;
+        margin-bottom: 15px;
+        font-weight: 700;
+        letter-spacing: 1px;
+      }
+
+        .dados-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 10px;
+        }
+
+        .dados-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 25px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s ease-in-out;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .dados-item h3 {
+            color: #ffd700;
+            font-size: 1.6em;
+            margin-bottom: 25px;
+            font-weight: 700;
+        }
+
+        .dados-item p {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #02d7fd;
+        }
+
+        .dados-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* ANIMAÇÃO */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Estilos para o botão deslizante */
+        .switch {
+            display: flex;
+            align-items: center;
+            gap: 10px; /* Adiciona espaço entre os elementos */
+        }
+
+        .switch input {
+            display: none;
+        }
+
+        .slider {
+            width: 50px;
+            height: 25px;
+            background-color: #ccc;
+            border-radius: 25px;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .slider:before {
+            content: "";
+            position: absolute;
+            width: 21px;
+            height: 21px;
+            background-color: #fff;
+            border-radius: 50%;
+            top: 2px;
+            left: 2px;
+            transition: transform 0.2s;
+        }
+
+        input:checked + .slider {
+            background-color: #02d7fd;
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(25px);
+        }
+
+        .switch span {
+            font-size: 1em;
+            color: #fff;
+        }
+
+        /* MEDIA QUERIES PARA RESPONSIVIDADE */
+        @media (max-width: 1024px) {
+        header h1 {
+          font-size: 2.5em;
+        }
+
+        .container {
+          padding: 30px;
+        }
+
+        .graph-item h3 {
+          font-size: 1.6em;
+        }
+        
+      }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 2em;
+            }
+
+            .container {
+                padding: 15px;
+                margin-top: 80px;
+            }
+
+            h1 {
+                font-size: 1.8em;
+            }
+
+            .metric-box {
+                flex: 1 1 100%;
+            }
+
+            button {
+                width: 90%;
+            }
+            .graph-item h3 {
+          font-size: 1.2em;
+        }
+      
+        }
+
+        @media (max-width: 480px) {
+            header h1 {
+                font-size: 1.5em;
+            }
+
+            .container {
+                margin-top: 70px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            .metrics {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .metric-box {
+                font-size: 0.9em;
+            }
+
+            button {
+                width: 100%;
+            }
+         
+            .graph-item {
+            height: 45vh; /* Reduz a altura para telas menores */
+            max-height: 50vh;
+        }
+            
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="/" class="back-btn">Voltar</a>
+        <div class="header-content">
+            <h2>Temperaturas</h2>
+        </div>
+        <div class="switch">
+            <span>°C</span>
+            <label class="switch">
+                <input type="checkbox" id="toggleTemp" onclick="toggleTemperature()">
+                <span class="slider"></span>
+            </label>
+            <span>°F</span>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dados-container">
+            <div class="dados-item">
+                <h3>Temperatura Atual</h3>
+                <p class="temperature" data-temp="{{ last_temperature }}">{{ "%.2f"|format(last_temperature) }} °C</p>
+            </div>
+            <div class="dados-item">
+                <h3>Temperatura Média</h3>
+                <p class="temperature" data-temp="{{ average_temperature }}">{{ "%.2f"|format(average_temperature) }} °C</p>
+            </div>
+            <div class="dados-item">
+                <h3>Temperatura Máxima</h3>
+                <p class="temperature" data-temp="{{ max_temperature }}">{{ "%.2f"|format(max_temperature) }} °C</p>
+            </div>
+            <div class="dados-item">
+                <h3>Temperatura Mínima</h3>
+                <p class="temperature" data-temp="{{ min_temperature }}">{{ "%.2f"|format(min_temperature) }} °C</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="graph-container">
+          <div class="graph-item">
+            <h3>Variação de Temperatura do dia</h3>
+            <canvas id="tempChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        function toggleTemperature() {
+            const toggle = document.getElementById("toggleTemp");
+            const tempElements = document.querySelectorAll(".temperature");
+
+            tempElements.forEach((element) => {
+                let temp = parseFloat(element.getAttribute("data-temp"));
+
+                if (toggle.checked) {
+                    // Convert to Fahrenheit
+                    temp = (temp * 9) / 5 + 32;
+                    element.textContent = temp.toFixed(1) + " °F";
+                } else {
+                    // Convert to Celsius
+                    temp = ((temp - 32) * 5) / 9;
+                    element.textContent = temp.toFixed(1) + " °C";
+                }
+
+                // Atualizar o atributo data-temp para o novo valor
+                element.setAttribute("data-temp", temp.toFixed(1));
+            });
+        }
+
+        const sensorData = JSON.parse('{{ sensor_data|tojson|safe }}');
+
+        const climateCtx = document.getElementById('tempChart').getContext('2d');
+        new Chart(climateCtx, {
+          type: 'line',
+          data: {
+            labels: sensorData.timestamps,
+            datasets: [
+              {
+                label: 'Temperatura (°C)',
+                data: sensorData.temperature,
+                borderColor: 'rgba(0, 123, 255, 1)', // Azul
+                backgroundColor: 'rgba(0, 123, 255, 0.2)', // Azul translúcido
+                borderWidth: 2,
+                fill: true
+              },
+            ]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+              legend: {
+                position: 'top',
+                labels: {
+                color: '#ffffff',
+                font: { size: 12 }
+            }
+              },
+              tooltip: {
+              backgroundColor: 'rgba(0, 0, 0, 0.1)',
+              titleColor: '#ffffff',
+              bodyColor: '#ffffff'
+            }
+            },
+            scales: {
+              y: {
+                beginAtZero: false,
+                ticks: {
+                  color: '#fff'
+                },
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                }
+              },
+              x: {
+                ticks: {
+                  color: '#fff'
+                },
+                grid: {
+                  color: 'rgba(255, 255, 255, 0.1)'
+                }
+              }
+            },
+            layout: {
+              padding: {
+                left: 10,
+                right: 10,
+                top: 10,
+                bottom: 10
+              }
+            },
+            elements: {
+              line: {
+                backgroundColor: '#fff' // Fundo branco para a linha do gráfico
+              }
+            }
+          }
+        });
+    </script>
+</body>
+</html>
