@@ -1,21 +1,29 @@
-# Use the official Golang image as the base image
-FROM golang:1.20-alpine
+# Escolha a versão do Go >= 1.16
+FROM golang:1.23-alpine
 
-# Set the Current Working Directory inside the container
+# Instale dependências necessárias
+RUN apk add --no-cache bash git
+
+# Defina o diretório de trabalho
 WORKDIR /app
 
-# Copy go mod file and download dependencies
+# Instale o Air
+RUN go install github.com/air-verse/air@latest
+
+# Copie os arquivos necessários
 COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy the source code into the container
+
+# Copie o restante do projeto para o contêiner
 COPY . .
 
-# Build the Go app
-RUN go build -o projeto-app .
-
-# Expose port 8080 to the outside world
+# Exponha a porta
 EXPOSE 8080
 
-# Command to run the executable
-CMD ["./projeto-app"]
+# Adicione o binário do Go ao PATH
+ENV PATH="/go/bin:${PATH}"
+
+# Comando para rodar o Air
+CMD ["air"]
+
