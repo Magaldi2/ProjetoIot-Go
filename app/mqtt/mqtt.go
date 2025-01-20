@@ -91,10 +91,11 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 func SetupMQTT() {
 	// Configurar opções do cliente MQTT
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://98.84.130.156:1883")
+	opts.AddBroker("tcp://98.84.130.156:1883") //IP principal
 	opts.SetClientID("GoMQTTClient")
 	opts.OnConnect = func(c mqtt.Client) {
 		log.Println("Conectado ao broker MQTT!")
+		//trocar a tag "konda" por outra
 		if token := c.Subscribe("konda", 0, mqttMessageHandler); token.Wait() && token.Error() != nil {
 			log.Fatalf("Erro ao se inscrever no tópico: %v", token.Error())
 		}

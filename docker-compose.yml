@@ -1,31 +1,63 @@
+
+
+networks:
+  app_network:
+    driver: bridge
+
 services:
-  go_app:
-    build:
-      context: .  # Diretório atual
-      dockerfile: Dockerfile
+  web:
+    build: .
     ports:
-      - "8080:8080"  # Porta do serviço Go
-    volumes:
-      - .:/app  # Montar o diretório local no container
+      - "8080:8080" # Porta do serviço Go
     environment:
       - MYSQL_HOST=mysql
       - MYSQL_USER=root
       - MYSQL_PASSWORD=example
       - MYSQL_DB=weather_data
-      - MQTT_BROKER=98.84.130.156 #colocar ip que se conecta com o broker
+      - MQTT_BROKER=mosquitto-broker
+    networks:
+      - app_network
 
   mysql:
     image: mysql:8.0
     container_name: mysql-database
     environment:
-      MYSQL_ROOT_PASSWORD: example  # Senha do root
-      MYSQL_DATABASE: weather_data  # Banco de dados inicial
+      MYSQL_ROOT_PASSWORD: example # Senha do root
+      MYSQL_DATABASE: weather_data # Banco de dados inicial
     ports:
-      - "3306:3306"  # Porta do MySQL para acesso externo
+      - "3306:3306" # Porta do MySQL para acesso externo
     volumes:
-      - mysql_data:/var/lib/mysql  # Volume persistente para os dados
-      - ./tabela.sql:/docker-entrypoint-initdb.d/tabela.sql  # Script SQL de inicialização
-      
+      - mysql_data:/var/lib/mysql # Volume persistente para os dados
+      - ./tabela.sql:/docker-entrypoint-initdb.d/tabela.sql # Script SQL de inicialização
+    networks:
+      - app_network
+
+  mosquitto:
+    image: eclipse-mosquitto:latest # Imagem oficial do Mosquitto
+    container_name: mosquitto-broker # Nome do container
+    ports:
+      - "1883:1883" # Porta MQTT
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+
+    restart: always # Reiniciar automaticamente
+    networks:
+      - app_network
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    container_name: phpmyadmin
+    environment:
+      PMA_HOST: mysql # Nome do serviço MySQL no Docker Compose
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: example # Deve ser igual ao configurado no MySQL
+    ports:
+      - "8000:80" # Porta para acessar o phpMyAdmin no navegador
+    depends_on:
+      - mysql
+    networks:
+      - app_network
+
 volumes:
   mysql_data:
     driver: local

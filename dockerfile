@@ -1,18 +1,21 @@
-# Usar uma imagem base oficial do Go
-FROM golang:1.23.4
+# Use the official Golang image as the base image
+FROM golang:1.20-alpine
 
-# Configurar o diretório de trabalho dentro do container
+# Set the Current Working Directory inside the container
 WORKDIR /app
 
-# Copiar arquivos do projeto para o container
+# Copy go mod file and download dependencies
+COPY go.mod go.sum ./
+RUN go mod download
+
+# Copy the source code into the container
 COPY . .
 
-RUN chmod +x app
-# Baixar e instalar dependências Go
-RUN go mod tidy
+# Build the Go app
+RUN go build -o projeto-app .
 
-# Compilar o aplicativo
-RUN go build -o app
+# Expose port 8080 to the outside world
+EXPOSE 8080
 
-# Comando para iniciar o aplicativo
-CMD ["projeto/app"]
+# Command to run the executable
+CMD ["./projeto-app"]

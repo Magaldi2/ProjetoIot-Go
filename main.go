@@ -18,7 +18,7 @@ func main() {
     http.HandleFunc("/", handlers.Index(templates))
     http.HandleFunc("/dados", handlers.Dashboard(templates))
     http.HandleFunc("/temperatura", handlers.PlotData(templates))
-
+    
     // Iniciar servidor HTTP
     log.Println("Servidor iniciado na porta 8080")
     if err := http.ListenAndServe(":8080", nil); err != nil {

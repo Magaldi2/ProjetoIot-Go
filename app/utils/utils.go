@@ -7,7 +7,6 @@ import (
 )
 
 func PrepareTemplateData(currentData, previousData map[string]interface{}) map[string]interface{} {
-	// Dados padrão caso currentData esteja vazio
 	if currentData == nil {
 		return map[string]interface{}{
 			"Message":            "Nenhum dado disponível no momento.",

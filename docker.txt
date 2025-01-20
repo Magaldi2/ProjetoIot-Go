@@ -1,0 +1,18 @@
+FROM golang:1.20 AS builder
+
+WORKDIR /app
+
+COPY . .
+
+# Define variáveis de ambiente para a compilação
+ENV CGO_ENABLED=0 
+
+RUN go build -o projeto-app main.go
+
+FROM alpine:3.18
+
+WORKDIR /app
+
+COPY --from=builder /app/projeto-app /app/projeto-app
+
+CMD ["/app/projeto-app"]
