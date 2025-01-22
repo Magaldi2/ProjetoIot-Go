@@ -4,11 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Clima PUC</title>
-    <link
-      rel="icon"
-      href="{{ url_for('static', filename='clima.png') }}"
-      type="image/png"
-    />
+    <link rel="icon" href="/static/images/clima.png" type="image/png" />
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
       rel="stylesheet"
@@ -177,116 +173,110 @@
 
       /* Estilos para o botão deslizante */
       .switch {
-          position: absolute;
-          top: 20px; /* Distância do topo */
-          right: 20px; /* Distância da direita */
-          display: flex;
-          align-items: center; /* Alinha os elementos verticalmente */
-          gap: 10px; /* Espaço entre Celsius, botão e Fahrenheit */
+        position: absolute;
+        top: 20px; /* Distância do topo */
+        right: 20px; /* Distância da direita */
+        display: flex;
+        align-items: center; /* Alinha os elementos verticalmente */
+        gap: 10px; /* Espaço entre Celsius, botão e Fahrenheit */
       }
 
       .switch label {
-          display: inline-flex;
-          align-items: center; /* Alinha o botão verticalmente */
+        display: inline-flex;
+        align-items: center; /* Alinha o botão verticalmente */
       }
 
       .slider {
-          width: 50px;
-          height: 25px;
-          background-color: #ccc;
-          border-radius: 25px;
-          position: relative;
-          cursor: pointer;
-          transition: background-color 0.2s;
+        width: 50px;
+        height: 25px;
+        background-color: #ccc;
+        border-radius: 25px;
+        position: relative;
+        cursor: pointer;
+        transition: background-color 0.2s;
       }
 
       .slider:before {
-          content: "";
-          position: absolute;
-          width: 21px;
-          height: 21px;
-          background-color: #fff;
-          border-radius: 50%;
-          top: 2px;
-          left: 2px;
-          transition: transform 0.2s;
+        content: "";
+        position: absolute;
+        width: 21px;
+        height: 21px;
+        background-color: #fff;
+        border-radius: 50%;
+        top: 2px;
+        left: 2px;
+        transition: transform 0.2s;
       }
 
       input {
-          display: none; /* Esconde o input padrão */
+        display: none; /* Esconde o input padrão */
       }
 
       input:checked + .slider {
-          background-color: #02d7fd;
+        background-color: #02d7fd;
       }
 
       input:checked + .slider:before {
-          transform: translateX(25px); /* Movimenta o botão */
+        transform: translateX(25px); /* Movimenta o botão */
       }
 
       /* MEDIA QUERIES PARA RESPONSIVIDADE */
       @media (max-width: 768px) {
-          header h1 {
-            font-size: 2em;
-          }
-
-          .container {
-            padding: 15px;
-            margin-top: 80px;
-          }
-
-          h1 {
-            font-size: 1.8em;
-          }
-
-          .metric-box {
-            flex: 1 1 100%;
-          }
-
-          button {
-            width: 90%;
-          }
+        header h1 {
+          font-size: 2em;
         }
 
-        @media (max-width: 480px) {
-          header h1 {
-            font-size: 1.5em;
-          }
+        .container {
+          padding: 15px;
+          margin-top: 80px;
+        }
 
-          .container {
-            margin-top: 70px;
-          }
+        h1 {
+          font-size: 1.8em;
+        }
 
-          h1 {
-            font-size: 1.5em;
-          }
+        .metric-box {
+          flex: 1 1 100%;
+        }
 
-          .metrics {
-            flex-direction: column;
-            gap: 10px;
-          }
-
-          .metric-box {
-            font-size: 0.9em;
-          }
-
-          button {
-            width: 100%;
-          }
+        button {
+          width: 90%;
+        }
       }
 
+      @media (max-width: 480px) {
+        header h1 {
+          font-size: 1.5em;
+        }
+
+        .container {
+          margin-top: 70px;
+        }
+
+        h1 {
+          font-size: 1.5em;
+        }
+
+        .metrics {
+          flex-direction: column;
+          gap: 10px;
+        }
+
+        .metric-box {
+          font-size: 0.9em;
+        }
+
+        button {
+          width: 100%;
+        }
+      }
     </style>
   </head>
   <body>
-
     <header>
       <div class="header-content">
         <h2>
-          <img
-        src="{{ url_for('static', filename='logo_puc.png') }}"
-        alt="PUC Logo"
-        width="100"
-      />
+          <img src="/static/images/logo_puc.png" alt="PUC Logo" width="100" />
         </h2>
 
         <div class="switch">
@@ -295,65 +285,78 @@
             <input
               type="checkbox"
               id="toggleTemp"
-              onclick="toggleTemperature()"
+              onchange="toggleTemperature()"
             />
             <span class="slider"></span>
           </label>
           <span>°F</span>
         </div>
       </div>
-    </header>    
+    </header>
 
     <div class="container">
-      
       <h1>Bem-vindo ao Clima PUC</h1>
 
       <div class="metrics">
+        <!-- Temperatura -->
         <div class="metric-box" id="temperature-box">
           <h2>Temperatura <i class="fas fa-thermometer-half"></i></h2>
-          <p id="temperature" class="temperature" data-temp="{{ temperature }}">{{ "%.f"|format(temperature) }}°C</p>
-          <p id="temperature-status">{{ temperature_status }}</p>
+          <p
+            id="temperature"
+            class="temperature"
+            data-temp="{{ .Temperature }}"
+          >
+            {{ printf "%.1f" .Temperature }}°C
+          </p>
+          <p id="temperature-status">{{ .TemperatureStatus }}</p>
         </div>
+
+        <!-- Umidade -->
         <div class="metric-box" id="humidity-box">
-          <h2>
-            Umidade
-            <i class="fas fa-tint"></i>
-          </h2>
-          <p id="humidity">{{ "%.f"|format(humidity) }}%</p>
-          <p id="humidity-status">{{ humidity_status }}</p>
+          <h2>Umidade <i class="fas fa-tint"></i></h2>
+          <p id="humidity">{{ printf "%.0f" .Humidity }}%</p>
+          <p id="humidity-status">{{ .HumidityStatus }}</p>
         </div>
+
+        <!-- Nível de Chuva -->
         <div class="metric-box" id="rain-level-box">
-          <h2>
-            Nível de Chuva
-            <i class="fas fa-cloud-showers-heavy"></i>
-          </h2>
-          <p id="rain-level">{{ "%.3f"|format(rain_level) }} mm</p>
-          <p id="rain-status">{{ rain_status }}</p>
+          <h2>Nível de Chuva <i class="fas fa-cloud-showers-heavy"></i></h2>
+          <p id="rain-level">{{ printf "%.3f" .RainLevel }} mm</p>
+          <p id="rain-status">{{ .RainStatus }}</p>
         </div>
+
+        <!-- Radiação UV -->
         <div class="metric-box" id="uv-box">
-          <h2>Radiação UV<i class="fas fa-sun"></i></h2>
-          <p id="uv-index">{{ "%.f"|format(uv_index) }}</p>
-          <p id="uv-status">{{ uv_status }}</p>
+          <h2>Radiação UV <i class="fas fa-sun"></i></h2>
+          <p id="uv-index">{{ printf "%.0f" .UVIndex }}</p>
+          <p id="uv-status">{{ .UVStatus }}</p>
         </div>
+
+        <!-- Direção e Velocidade do Vento -->
         <div class="metric-box" id="wind-direction-box">
-          <h2>
-            Direção e Velocidade do Vento
-            <i class="fas fa-wind"></i>
-          </h2>
-          <div style="display: flex; align-items: center; justify-content: center;">
-            <div style="flex: 1; text-align: center;">
-              <div class="arrow {{ wind_icon_class }}"></div>
-              <p id="wind-direction">{{ wind_direction }}</p>
+          <h2>Direção e Velocidade do Vento <i class="fas fa-wind"></i></h2>
+          <div
+            style="display: flex; align-items: center; justify-content: center"
+          >
+            <div style="flex: 1; text-align: center">
+              <div class="arrow {{ .WindIconClass }}"></div>
+              <p id="wind-direction">{{ .WindDirection }}</p>
             </div>
-            <div style="width: 2px; height: 50px; background-color: #fff; margin: 0 20px;"></div>
-            <div style="flex: 1; text-align: center;">
-              <p id="wind-speed">{{ "%.2f"|format(wind_speed_kmh) }} km/h</p>
-              <p id="wind-speed-status">{{ wind_speed_status }}</p>
+            <div
+              style="
+                width: 2px;
+                height: 50px;
+                background-color: #fff;
+                margin: 0 20px;
+              "
+            ></div>
+            <div style="flex: 1; text-align: center">
+              <p id="wind-speed">{{ printf "%.2f" .WindSpeedKMH }} km/h</p>
+              <p id="wind-speed-status">{{ .WindSpeedStatus }}</p>
             </div>
           </div>
         </div>
       </div>
-
       <button onclick="window.location.href='/temperatura'">
         Conferir temperatura atual
       </button>
@@ -364,20 +367,29 @@
       <div class="footer">
         <p>
           Desenvolvido por alunos da
-          <a>PUC</a>.
-          Todos os direitos reservados.
+          <a>PUC</a>. Todos os direitos reservados.
         </p>
       </div>
     </div>
     <script>
-      // Função para atualizar os dados
+      //Função para atualizar os dados
       function updateData() {
-        fetch("/")
-          .then((response) => response.json())
+        fetch("/api")
+          .then((response) => {
+            if (!response.ok) {
+              return response.json().then((err) => {
+                throw err;
+              });
+            }
+            return response.json();
+          })
           .then((data) => {
             // Atualizando os valores de texto
             document.getElementById("temperature").textContent =
               data.temperature + "°C";
+            document
+              .getElementById("temperature")
+              .setAttribute("data-temp", data.temperature);
             document.getElementById("temperature-status").textContent =
               data.temperature_status;
             document.getElementById("humidity").textContent =
@@ -395,11 +407,10 @@
               data.wind_speed_kmh + " km/h";
             document.getElementById("wind-speed-status").textContent =
               data.wind_speed_status;
-
-            // Alterando ícones dinamicamente
-            changeIcons(data);
           })
-          .catch((error) => console.error("Error fetching data:", error));
+          .catch((error) => {
+            console.error("Erro:", error.error); // Acessa a mensagem de erro
+          });
       }
 
       function toggleTemperature() {
@@ -407,20 +418,22 @@
         const tempElements = document.querySelectorAll(".temperature");
 
         tempElements.forEach((element) => {
-          let temp = parseFloat(element.getAttribute("data-temp"));
+          const tempValue = element.getAttribute("data-temp");
 
-          if (toggle.checked) {
-            // Convert to Fahrenheit
-            temp = (temp * 9) / 5 + 32;
-            element.textContent = temp.toFixed(1) + " °F";
-          } else {
-            // Convert to Celsius
-            temp = ((temp - 32) * 5) / 9;
-            element.textContent = Math.round(temp) + " °C";
+          // Add validation
+          if (!tempValue || isNaN(tempValue)) {
+            console.error("Invalid temperature value:", tempValue);
+            return;
           }
 
-          // Atualizar o atributo data-temp para o novo valor
-          element.setAttribute("data-temp", temp.toFixed(1));
+          let tempCelsius = parseFloat(tempValue);
+
+          if (toggle.checked) {
+            const tempFahrenheit = (tempCelsius * 9) / 5 + 32;
+            element.textContent = tempFahrenheit.toFixed(1) + " °F";
+          } else {
+            element.textContent = tempCelsius.toFixed(1) + " °C";
+          }
         });
       }
 
@@ -429,7 +442,7 @@
         // Alterando ícone de Temperatura
         const temperatureBox = document.getElementById("temperature-box");
         const temperatureIcon = temperatureBox.querySelector("i");
-        if (data.temperature > 30) {
+        if (data.Temperature > 30) {
           temperatureIcon.classList.remove("fa-thermometer-half");
           temperatureIcon.classList.add("fa-sun");
         } else {
@@ -462,7 +475,7 @@
         // Alterando ícone de Radiação UV
         const uvBox = document.getElementById("uv-box");
         const uvIcon = uvBox.querySelector("i");
-        if (data.uv_index > 7) {
+        if (data.Uv_index > 7) {
           uvIcon.classList.remove("fa-sun");
           uvIcon.classList.add("fa-sun-cloud");
         } else {

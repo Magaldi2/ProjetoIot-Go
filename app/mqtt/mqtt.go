@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"log"
+	"math"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -12,14 +13,14 @@ import (
 
 // SensorData representa os dados do sensor
 type SensorData struct {
-	RainLevel       float64 `json:"rain_level"`
+	RainLevel        float64 `json:"rain_level"`
 	AverageWindSpeed float64 `json:"average_wind_speed"`
-	WindDirection   float64 `json:"wind_direction"`
-	Humidity        float64 `json:"humidity"`
-	UVIndex         float64 `json:"uv_index"`
-	SolarRadiation  float64 `json:"solar_radiation"`
-	Temperature     float64 `json:"temperature"`
-	Timestamp       int64   `json:"timestamp"`
+	WindDirection    float64 `json:"wind_direction"`
+	Humidity         float64 `json:"humidity"`
+	UVIndex          float64 `json:"uv_index"`
+	SolarRadiation   float64 `json:"solar_radiation"`
+	Temperature      float64 `json:"temperature"`
+	Timestamp        int64   `json:"timestamp"`
 }
 
 // saveToMySQL salva os dados no banco de dados MySQL
@@ -89,27 +90,47 @@ func mqttMessageHandler(client mqtt.Client, msg mqtt.Message) {
 }
 
 func SetupMQTT() {
-	// Configurar opções do cliente MQTT
 	opts := mqtt.NewClientOptions()
-	opts.AddBroker("tcp://98.84.130.156:1883") //IP principal
+	opts.AddBroker("tcp://98.84.130.156:1883")
 	opts.SetClientID("GoMQTTClient")
+
+	// 1️⃣ Remove log.Fatalf para evitar encerrar o processo
 	opts.OnConnect = func(c mqtt.Client) {
 		log.Println("Conectado ao broker MQTT!")
-		//trocar a tag "konda" por outra
 		if token := c.Subscribe("konda", 0, mqttMessageHandler); token.Wait() && token.Error() != nil {
-			log.Fatalf("Erro ao se inscrever no tópico: %v", token.Error())
+			log.Printf("Erro na inscrição: %v", token.Error()) // Só loga, não encerra
+			return
 		}
 	}
+
+	// 2️⃣ Adiciona tentativa de reconexão automática
 	opts.OnConnectionLost = func(c mqtt.Client, err error) {
-		log.Printf("Conexão perdida com o broker MQTT: %v", err)
+		log.Printf("Conexão perdida: %v", err)
+		go reconnectMQTT(c) // Inicia reconexão em background
 	}
 
-	// Criar e conectar o cliente MQTT
 	client := mqtt.NewClient(opts)
+
+	// 3️⃣ Conexão inicial sem fatal error
 	if token := client.Connect(); token.Wait() && token.Error() != nil {
-		log.Fatalf("Erro ao conectar ao broker MQTT: %v", token.Error())
+		log.Printf("Falha inicial: %v", token.Error())
+		go reconnectMQTT(client) // Começa tentativas de reconexão
 	}
 
-	// Loop infinito para manter o cliente ativo
-	select {}
+	// 4️⃣ Mantém a função viva sem bloquear execução
+	for {
+		time.Sleep(1 * time.Hour) // Reduz consumo de CPU
+	}
+}
+
+// 5️⃣ Lógica inteligente de reconexão com backoff
+func reconnectMQTT(c mqtt.Client) {
+	retryInterval := 5 * time.Second
+	for {
+		time.Sleep(retryInterval)
+		if token := c.Connect(); token.Wait() && token.Error() == nil {
+			return // Reconectou com sucesso
+		}
+		retryInterval = time.Duration(math.Min(float64(retryInterval*2), 300)) // Limita a 5 minutos
+	}
 }
