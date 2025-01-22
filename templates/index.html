@@ -6,7 +6,7 @@
     <title>Clima PUC</title>
     <link
       rel="icon"
-      href="{{ url_for('static', filename='clima.png') }}"
+      href="/static/clima.png"
       type="image/png"
     />
     <link
@@ -283,7 +283,7 @@
       <div class="header-content">
         <h2>
           <img
-        src="{{ url_for('static', filename='logo_puc.png') }}"
+        src="/static/logo_puc.png"
         alt="PUC Logo"
         width="100"
       />
@@ -305,55 +305,55 @@
     </header>    
 
     <div class="container">
-      
       <h1>Bem-vindo ao Clima PUC</h1>
-
+    
       <div class="metrics">
+        <!-- Temperatura -->
         <div class="metric-box" id="temperature-box">
           <h2>Temperatura <i class="fas fa-thermometer-half"></i></h2>
-          <p id="temperature" class="temperature" data-temp="{{ temperature }}">{{ "%.f"|format(temperature) }}°C</p>
-          <p id="temperature-status">{{ temperature_status }}</p>
+          <p id="temperature">{{ printf "%.1f" .Temperature }}°C</p>
+          <p id="temperature-status">{{ .TemperatureStatus }}</p>
         </div>
+    
+        <!-- Umidade -->
         <div class="metric-box" id="humidity-box">
-          <h2>
-            Umidade
-            <i class="fas fa-tint"></i>
-          </h2>
-          <p id="humidity">{{ "%.f"|format(humidity) }}%</p>
-          <p id="humidity-status">{{ humidity_status }}</p>
+          <h2>Umidade <i class="fas fa-tint"></i></h2>
+          <p id="humidity">{{ printf "%.0f" .Humidity }}%</p>
+          <p id="humidity-status">{{ .HumidityStatus }}</p>
         </div>
+    
+        <!-- Nível de Chuva -->
         <div class="metric-box" id="rain-level-box">
-          <h2>
-            Nível de Chuva
-            <i class="fas fa-cloud-showers-heavy"></i>
-          </h2>
-          <p id="rain-level">{{ "%.3f"|format(rain_level) }} mm</p>
-          <p id="rain-status">{{ rain_status }}</p>
+          <h2>Nível de Chuva <i class="fas fa-cloud-showers-heavy"></i></h2>
+          <p id="rain-level">{{ printf "%.3f" .RainLevel }} mm</p>
+          <p id="rain-status">{{ .RainStatus }}</p>
         </div>
+    
+        <!-- Radiação UV -->
         <div class="metric-box" id="uv-box">
-          <h2>Radiação UV<i class="fas fa-sun"></i></h2>
-          <p id="uv-index">{{ "%.f"|format(uv_index) }}</p>
-          <p id="uv-status">{{ uv_status }}</p>
+          <h2>Radiação UV <i class="fas fa-sun"></i></h2>
+          <p id="uv-index">{{ printf "%.0f" .UVIndex }}</p>
+          <p id="uv-status">{{ .UVStatus }}</p>
         </div>
+    
+        <!-- Direção e Velocidade do Vento -->
         <div class="metric-box" id="wind-direction-box">
-          <h2>
-            Direção e Velocidade do Vento
-            <i class="fas fa-wind"></i>
-          </h2>
+          <h2>Direção e Velocidade do Vento <i class="fas fa-wind"></i></h2>
           <div style="display: flex; align-items: center; justify-content: center;">
             <div style="flex: 1; text-align: center;">
-              <div class="arrow {{ wind_icon_class }}"></div>
-              <p id="wind-direction">{{ wind_direction }}</p>
+              <div class="arrow {{ .WindIconClass }}"></div>
+              <p id="wind-direction">{{ .WindDirection }}</p>
             </div>
             <div style="width: 2px; height: 50px; background-color: #fff; margin: 0 20px;"></div>
             <div style="flex: 1; text-align: center;">
-              <p id="wind-speed">{{ "%.2f"|format(wind_speed_kmh) }} km/h</p>
-              <p id="wind-speed-status">{{ wind_speed_status }}</p>
+              <p id="wind-speed">{{ printf "%.2f" .WindSpeedKMH }} km/h</p>
+              <p id="wind-speed-status">{{ .WindSpeedStatus }}</p>
             </div>
           </div>
         </div>
       </div>
-
+    </div>
+    
       <button onclick="window.location.href='/temperatura'">
         Conferir temperatura atual
       </button>
@@ -370,11 +370,16 @@
       </div>
     </div>
     <script>
-      // Função para atualizar os dados
+      //Função para atualizar os dados
       function updateData() {
-        fetch("/")
-          .then((response) => response.json())
-          .then((data) => {
+      fetch("/api")
+        .then(response => {
+            if (!response.ok) {
+                return response.json().then(err => { throw err; });
+            }
+            return response.json();
+        })
+        .then(data => {
             // Atualizando os valores de texto
             document.getElementById("temperature").textContent =
               data.temperature + "°C";
@@ -395,16 +400,15 @@
               data.wind_speed_kmh + " km/h";
             document.getElementById("wind-speed-status").textContent =
               data.wind_speed_status;
-
-            // Alterando ícones dinamicamente
-            changeIcons(data);
-          })
-          .catch((error) => console.error("Error fetching data:", error));
+        })
+        .catch(error => {
+            console.error("Erro:", error.error); // Acessa a mensagem de erro
+        });
       }
 
       function toggleTemperature() {
         const toggle = document.getElementById("toggleTemp");
-        const tempElements = document.querySelectorAll(".temperature");
+        const tempElements = document.querySelectorAll(".Temperature");
 
         tempElements.forEach((element) => {
           let temp = parseFloat(element.getAttribute("data-temp"));
@@ -429,7 +433,7 @@
         // Alterando ícone de Temperatura
         const temperatureBox = document.getElementById("temperature-box");
         const temperatureIcon = temperatureBox.querySelector("i");
-        if (data.temperature > 30) {
+        if (data.Temperature > 30) {
           temperatureIcon.classList.remove("fa-thermometer-half");
           temperatureIcon.classList.add("fa-sun");
         } else {
@@ -462,7 +466,7 @@
         // Alterando ícone de Radiação UV
         const uvBox = document.getElementById("uv-box");
         const uvIcon = uvBox.querySelector("i");
-        if (data.uv_index > 7) {
+        if (data.Uv_index > 7) {
           uvIcon.classList.remove("fa-sun");
           uvIcon.classList.add("fa-sun-cloud");
         } else {

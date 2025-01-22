@@ -6,7 +6,7 @@
     <title>Clima PUC</title>
     <link
       rel="icon"
-      href="{{ url_for('static', filename='clima.png') }}"
+      href="/static/clima.png"
       type="image/png"
     />
     <style>
@@ -199,7 +199,7 @@
     </div>
 
     <script>
-      const sensorData = JSON.parse('{{ sensor_data|tojson|safe }}');
+      const sensorData = JSON.parse('{{ .sensor_data }}');
 
       const climateCtx = document.getElementById('climateChart').getContext('2d');
       new Chart(climateCtx, {
