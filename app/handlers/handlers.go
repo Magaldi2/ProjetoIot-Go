@@ -49,25 +49,25 @@ func Dashboard(templates *template.Template) http.HandlerFunc {
 		db, err := sql.Open("mysql", DatabaseConfig())
 		if err != nil {
 			log.Printf("Erro ao conectar ao banco: %v", err)
-			http.Error(w, "erro interno", http.StatusInternalServerError)
+			http.Error(w, "Erro interno", http.StatusInternalServerError)
 			return
 		}
 		defer db.Close()
 
-		// calculo do inicio e fim do dia (UTC-3)
+		// Cálculo do período (UTC-3)
 		now := time.Now().UTC()
-		localNow := now.Add(-3 * time.Hour) //UTC-3
+		localNow := now.Add(-3 * time.Hour)
 		startDay := time.Date(localNow.Year(), localNow.Month(), localNow.Day(), 0, 0, 0, 0, time.UTC)
 		startTimestamp := startDay.Unix() + 3*3600
 		endTimestamp := startTimestamp + 24*3600
 
-		// Buscar dados do dia atual
+		// Buscar dados
 		query := `
-			SELECT timestamp, temperature, humidity, rain_level, average_wind_speed
-			FROM sensor_data
-			WHERE timestamp BETWEEN ? AND ?
-			ORDER BY timestamp
-		`
+            SELECT timestamp, temperature, humidity, rain_level, average_wind_speed 
+            FROM sensor_data 
+            WHERE timestamp BETWEEN ? AND ? 
+            ORDER BY timestamp
+        `
 		rows, err := db.Query(query, startTimestamp, endTimestamp)
 		if err != nil {
 			log.Printf("Erro ao buscar dados: %v", err)
@@ -76,47 +76,63 @@ func Dashboard(templates *template.Template) http.HandlerFunc {
 		}
 		defer rows.Close()
 
-		sensorData := struct {
-			Timestamps  []string
-			Temperature []float64
-			Humidity    []float64
-			RainLevel   []float64
-			WindSpeed   []float64
-		}{}
+		// Estrutura para armazenar os dados
+		type SensorData struct {
+			Timestamps  []string  `json:"timestamps"`
+			Temperature []float64 `json:"temperature"`
+			Humidity    []float64 `json:"humidity"`
+			RainLevel   []float64 `json:"rain_level"`
+			WindSpeed   []float64 `json:"wind_speed"`
+		}
+
+		var sensorData SensorData
 
 		for rows.Next() {
 			var timestamp int64
-			var temperature, humidity, rainLevel, windSpeed sql.NullFloat64
+			var temp, hum, rain, wind sql.NullFloat64
 
-			if err := rows.Scan(&timestamp, &temperature, &humidity, &rainLevel, &windSpeed); err != nil {
+			if err := rows.Scan(&timestamp, &temp, &hum, &rain, &wind); err != nil {
 				log.Printf("Erro ao processar linha: %v", err)
 				continue
 			}
 
-			formattedTime := time.Unix(timestamp-3*3600, 0).Format("15:04") // UTC-3
+			// Converter timestamp para hora local
+			formattedTime := time.Unix(timestamp-3*3600, 0).Format("15:04")
 			sensorData.Timestamps = append(sensorData.Timestamps, formattedTime)
-			if temperature.Valid {
-				sensorData.Temperature = append(sensorData.Temperature, temperature.Float64)
+
+			// Popular dados com validação de NULL
+			addNullable := func(src sql.NullFloat64, dest *[]float64) {
+				if src.Valid {
+					*dest = append(*dest, src.Float64)
+				} else {
+					*dest = append(*dest, 0.0)
+				}
 			}
-			if humidity.Valid {
-				sensorData.Humidity = append(sensorData.Humidity, humidity.Float64)
-			}
-			if rainLevel.Valid {
-				sensorData.RainLevel = append(sensorData.RainLevel, rainLevel.Float64)
-			}
-			if windSpeed.Valid {
-				sensorData.WindSpeed = append(sensorData.WindSpeed, windSpeed.Float64*3.6) // m/s para km/h
+
+			addNullable(temp, &sensorData.Temperature)
+			addNullable(hum, &sensorData.Humidity)
+			addNullable(rain, &sensorData.RainLevel)
+
+			// Converter m/s para km/h
+			if wind.Valid {
+				sensorData.WindSpeed = append(sensorData.WindSpeed, wind.Float64*3.6)
+			} else {
+				sensorData.WindSpeed = append(sensorData.WindSpeed, 0.0)
 			}
 		}
 
-		if len(sensorData.Timestamps) == 0 {
-			templates.ExecuteTemplate(w, "dashboard.html", map[string]string{
-				"Message": "Nenhum dado disponível no momento.",
-			})
+		// Serializar para JSON
+		sensorDataJSON, err := json.Marshal(sensorData)
+		if err != nil {
+			log.Printf("Erro ao serializar JSON: %v", err)
+			http.Error(w, "Erro interno", http.StatusInternalServerError)
 			return
 		}
 
-		templates.ExecuteTemplate(w, "dashboard.html", sensorData)
+		// Passar dados para o template
+		templates.ExecuteTemplate(w, "dashboard.html", map[string]interface{}{
+			"SensorData": template.JS(sensorDataJSON), // Dados completos para gráficos
+		})
 	}
 }
 
@@ -243,6 +259,13 @@ func PlotData(templates *template.Template) http.HandlerFunc {
 			return
 		}
 
+		sensorData := map[string]interface{}{
+			"timestamps":  timestamps,
+			"Temperature": temperatures,
+		}
+
+		sensorDataJSON, _ := json.Marshal(sensorData)
+
 		// Calcular métricas
 		lastTemperature := temperatures[len(temperatures)-1]
 		averageTemperature := utils.CalculateAverage(temperatures)
@@ -256,6 +279,7 @@ func PlotData(templates *template.Template) http.HandlerFunc {
 			"AverageTemperature": averageTemperature,
 			"MaxTemperature":     maxTemperature,
 			"MinTemperature":     minTemperature,
+			"SensorData":         template.JS(sensorDataJSON), // Usar template.JS
 		})
 	}
 }

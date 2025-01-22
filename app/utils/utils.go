@@ -114,7 +114,6 @@ func getFloatFromMap(data map[string]interface{}, key string) float64 {
 
 // GetMySQLData retorna os dois últimos registros do banco
 func GetMySQLData(db *sql.DB) (map[string]interface{}, map[string]interface{}) {
-	// Query corrigida (remova o alias se a coluna já existe)
 	rows, err := db.Query(`
         SELECT 
             rain_level, 

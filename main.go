@@ -13,6 +13,9 @@ var templates = template.Must(template.ParseGlob("templates/*.html"))
 func main() {
 	go mqtt.SetupMQTT()
 
+	// Carregar as imagens
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+
 	// Rotas de templates
 	http.HandleFunc("/", handlers.Index(templates))
 	http.HandleFunc("/dados", handlers.Dashboard(templates))
